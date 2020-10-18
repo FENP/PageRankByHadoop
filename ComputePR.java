@@ -13,13 +13,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class ComputePR {
   private static final float q = 0.85f;  
-  public static class TokenizerMapper
-       extends Mapper<Object, Text, Text, Text>{
+  public static class TokenizerMapper extends Mapper<Object, Text, Text, Text>{
     private Text outId = new Text(), PRInfo = new Text();
     private int count;
     private String line;
-    public void map(Object key, Text value, Context context
-                    ) throws IOException, InterruptedException {
+    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
       StringTokenizer itr = new StringTokenizer(value.toString());
       if(itr.hasMoreTokens())
         line += itr.nextToken();
@@ -35,15 +33,12 @@ public class ComputePR {
     }
   }
 
-  public static class PageRankReducer
-       extends Reducer<Text,Text,Text,Text> {
+  public static class PageRankReducer extends Reducer<Text,Text,Text,Text> {
     private Text result = new Text();
     private int N = 0;
     private float Npr = 0;
     private String line;
-    public void reduce(Text key, Iterable<Text> values,
-                       Context context
-                       ) throws IOException, InterruptedException {
+    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
       if(key.toString().equals("0")){
         for (Text val : values) {
           String[] params = val.toString().split(" ");
