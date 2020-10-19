@@ -18,17 +18,21 @@ public class ComputePR {
     private int count;
     private String line;
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-      StringTokenizer itr = new StringTokenizer(value.toString());
-      if(itr.hasMoreTokens())
-        line += itr.nextToken();
-      line += (" " + itr.nextToken());
-      count = itr.countTokens();
-      line += (" " + String.valueOf(count)); 
+      StringTokenizer itr = new StringTokenizer(value.toString(), "\n");  // 按行切割，获取每一行的一个URL与其PR值、外链接
       while (itr.hasMoreTokens()) {
-        String id = itr.nextToken();
-        outId.set(id);
-        PRInfo.set(line);
-        context.write(outId, PRInfo);
+        String linkLine = itr.nextToken();
+        /* 行内切割字符串 */
+        String[] words = linkLine.split(" |\t");
+        line = "";
+        line += (words[0] + " " + words[1]);
+        count = words.length - 2;
+        line += (" " + String.valueOf(count)); 
+        for(int i = 2; i < words.length; i++){
+          String id = words[i];
+          outId.set(id);
+          PRInfo.set(line);
+          context.write(outId, PRInfo);
+        }   
       }
     }
   }
@@ -36,23 +40,21 @@ public class ComputePR {
   public static class PageRankReducer extends Reducer<Text,Text,Text,Text> {
     private Text result = new Text();
     private int N = 0;
-    private float Npr = 0;
-    private String line;
+    private float Npr = 0.0f;
+    private String line = "";
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-      if(key.toString().equals("0")){
-        for (Text val : values) {
-          String[] params = val.toString().split(" ");
-          line += (" " + params[0]);
-          float pr = Float.parseFloat(params[1]);
-          int n = Integer.parseInt(params[2]);
-          Npr += (pr / n);
-          N++;
-        }
-        Npr *= q;
-        Npr += (1 - q) / N;
-        result.set(String.valueOf(Npr) + line);
-        context.write(key, result);
+      for (Text val : values) {
+        String[] params = val.toString().split(" ");
+        line += (" " + params[0]);
+        float pr = Float.parseFloat(params[1]);
+        int n = Integer.parseInt(params[2]);
+        Npr += (pr / n);
+        N++;
       }
+      Npr *= q;
+      Npr += (1 - q) / N;
+      result.set(String.valueOf(Npr) + line);
+      context.write(key, result);
     }
   }
 

@@ -12,23 +12,31 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class OutLink {
+  /*
+    使用map函数得到<URL, 外链接>
+  */
   public static class TokenizerMapper extends Mapper<Object, Text, IntWritable, Text>{
-    private IntWritable word1 = new IntWritable(); 
-    private Text word2 = new Text();
+    private IntWritable word1 = new IntWritable();  // key
+    private Text word2 = new Text();                // value
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-      StringTokenizer itr = new StringTokenizer(value.toString(), "\n");
+      StringTokenizer itr = new StringTokenizer(value.toString(), "\n");  // 按行切割字符串
       while (itr.hasMoreTokens()) {
         String line = itr.nextToken();
+        /* 忽略注释行 */
         if(line.charAt(0) == '#')
           continue;
+        /* 行内切割字符串 */
         String[] words = line.split("\t");
-        word1.set(Integer.parseInt(words[0]));
-        word2.set(words[1]);
-        context.write(word1, word2);
+        word1.set(Integer.parseInt(words[0]));  // 获得URL
+        word2.set(words[1]);                    // 获得外链接
+        context.write(word1, word2);            
       }
     }
   }
 
+  /*
+    合并外链接，并将初始PR值置为1.0
+  */
   public static class OutLinkJoinReducer extends Reducer<IntWritable,Text,IntWritable,Text> {
     private Text result = new Text();
     public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
