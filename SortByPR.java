@@ -18,8 +18,8 @@ public class SortByPR {
   public static class TokenizerMapper extends Mapper<Object, Text, FloatWritable, Text>{
     private Text Id = new Text();
     private FloatWritable PR = new FloatWritable();
-    private float v;
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+      float v = 0;
       StringTokenizer itr = new StringTokenizer(value.toString(), "\n");  // 按行切割，获得URL与其PR值
       while (itr.hasMoreTokens()) {
         String line = itr.nextToken();
@@ -38,8 +38,8 @@ public class SortByPR {
   */
   public static class SortReducer extends Reducer<FloatWritable,Text,FloatWritable,Text> {
     private Text result = new Text();
-    private String line = "";
     public void reduce(FloatWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+      String line = "";
       for (Text val : values) {
         line += val.toString();
         line += " ";
